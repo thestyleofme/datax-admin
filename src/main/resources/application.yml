@@ -1,0 +1,88 @@
+server:
+  port: 9527
+management:
+  server:
+    port: 9528
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    shutdown:
+      enabled: true
+
+spring:
+  application:
+    name: ${SPRING_APPLICATION_NAME:datax-admin}
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/datax_admin?useUnicode=true&characterEncoding=utf-8&useSSL=false}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:tse@9527}
+    driver-class-name: com.mysql.jdbc.Driver
+    hikari:
+      # 连接池最小空闲连接数
+      minimum-idle: ${SPRING_DATASOURCE_MINIMUM_IDLE:20}
+      # 连接池允许的最大连接数
+      maximum-pool-size: ${SPRING_DATASOURCE_MAXIMUM_POOL_SIZE:200}
+      # 等待连接池分配连接的最大时长（毫秒）
+      connection-timeout: ${SPRING_DATASOURCE_CONNECTION_TIMEOUT:30000}
+  redis:
+    host: ${SPRING_REDIS_HOST:172.23.16.63}
+    port: ${SPRING_REDIS_PORT:26379}
+    database: ${SPRING_REDIS_DATABASE:1}
+    password: ${SPRING_REDIS_PASSWORD:redis!qaz}
+    timeout: 5000
+    lettuce:
+      pool:
+        # 资源池中最大连接数
+        # 默认8，-1表示无限制；可根据服务并发redis情况及服务端的支持上限调整
+        max-active: ${SPRING_REDIS_POOL_MAX_ACTIVE:50}
+        # 资源池运行最大空闲的连接数
+        # 默认8，-1表示无限制；可根据服务并发redis情况及服务端的支持上限调整，一般建议和max-active保持一致，避免资源伸缩带来的开销
+        max-idle: ${SPRING_REDIS_POOL_MAX_IDLE:50}
+        # 当资源池连接用尽后，调用者的最大等待时间(单位为毫秒)
+        # 默认 -1 表示永不超时，设置5秒
+        max-wait: ${SPRING_REDIS_POOL_MAX_WAIT:5000}
+  servlet:
+    multipart:
+      # 是否支持多部分上传
+      enabled: true
+      # 最大支持文件上传的大小
+      max-file-size: 300MB
+      # 支持请求最大文件上传的大小
+      max-request-size: 300MB
+  mvc:
+    format:
+      date-time: yyyy-MM-dd HH:mm:ss
+  jackson:
+    dateFormat: yyyy-MM-dd HH:mm:ss
+    timeZone: GMT+8
+    default-property-inclusion: non_null
+
+mybatis-plus:
+  mapperLocations: classpath*:mapper/*.xml
+  configuration:
+    mapUnderscoreToCamelCase: true
+
+logging:
+  level:
+    org.apache.ibatis: ${LOGGING_LEVEL:debug}
+    com.github.thestyleofme: ${LOGGING_LEVEL:debug}
+jasypt:
+  encryptor:
+    # 加密盐值
+    password: ${JASYPT_ENCRYPTOR_PASSWORD:hUyhdphl2gXcBDEH5dy}
+
+plugin:
+  run-mode: prod
+  store-type: minio
+  minio:
+    endpoint: http://hdspdev010:9000
+    access-key: AKIAIOSFODNN7EXAMPLE
+    secret-key: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+  plugin-path: dist/plugins
+  plugin-config-file-path: dist/pluginConfig
+
+datax:
+  zookeeper:
+    address: 172.23.16.70:2181,172.23.16.71:2181,172.23.16.72:2181

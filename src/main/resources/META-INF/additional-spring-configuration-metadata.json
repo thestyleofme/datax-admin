@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "datax.zookeeper.address",
+      "type": "java.lang.String",
+      "description": "datax server register zookeeper address."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.thestyleofme.datax.server.infra.mapper.DataxStatisticsMapper">
+  <resultMap id="BaseResultMap" type="com.github.thestyleofme.datax.server.domain.entity.DataxStatistics">
+    <result column="id" jdbcType="BIGINT" property="id" />
+    <result column="exec_id" jdbcType="INTEGER" property="execId" />
+    <result column="json_file_name" jdbcType="VARCHAR" property="jsonFileName" />
+    <result column="job_name" jdbcType="VARCHAR" property="jobName" />
+    <result column="reader_plugin" jdbcType="VARCHAR" property="readerPlugin" />
+    <result column="writer_plugin" jdbcType="VARCHAR" property="writerPlugin" />
+    <result column="start_time" jdbcType="VARCHAR" property="startTime" />
+    <result column="end_time" jdbcType="VARCHAR" property="endTime" />
+    <result column="total_costs" jdbcType="VARCHAR" property="totalCosts" />
+    <result column="byte_speed_per_second" jdbcType="VARCHAR" property="byteSpeedPerSecond" />
+    <result column="record_speed_per_second" jdbcType="VARCHAR" property="recordSpeedPerSecond" />
+    <result column="total_read_records" jdbcType="BIGINT" property="totalReadRecords" />
+    <result column="total_error_records" jdbcType="BIGINT" property="totalErrorRecords" />
+    <result column="job_path" jdbcType="VARCHAR" property="jobPath" />
+    <result column="job_content" jdbcType="VARCHAR" property="jobContent" />
+    <result column="dirty_records" jdbcType="VARCHAR" property="dirtyRecords" />
+  </resultMap>
+
+</mapper>
