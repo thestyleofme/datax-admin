@@ -102,8 +102,17 @@ public class Snack3Test {
     public void testPush() {
         ONode oNode = ONode.loadStr(testJson);
         ONode parameterNode = oNode.select("$.job.content[0].reader.parameter");
-        parameterNode.set("where","id >= 1 and id < 1000");
+        parameterNode.set("where", "id >= 1 and id < 1000");
         System.out.println(oNode.toJson());
-        Assert.assertEquals("id >= 1 and id < 1000",parameterNode.getOrNull("where").getString());
+        Assert.assertEquals("id >= 1 and id < 1000", parameterNode.select("where").getString());
+    }
+
+    @Test
+    public void testRecursion() {
+        ONode rootNode = ONode.loadStr(testJson);
+        rootNode.select("$..parameter[?(@.password)]").forEach(oNode -> oNode.set("password", "******"));
+        rootNode.select("$..parameter[?(@.accessKey)]").forEach(oNode -> oNode.set("accessKey", "******"));
+        System.out.println(rootNode.toJson());
+        Assert.assertEquals("******", rootNode.select("$.job.content[0].reader.parameter.password").getString());
     }
 }

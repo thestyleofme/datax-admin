@@ -27,12 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Slf4j
-public class DataxSyncServiceImpl extends ServiceImpl<DataxSyncMapper, DataxSync>  implements DataxSyncService {
-
-    private static final String PASSWORD_REGEX = "password\": *\"(.*?)(\")";
-    private static final String ACCESS_KEY_REGEX = "accessKey\":(.*?)\"";
-    private static final String PASSWORD_REPLACEMENT = "password\":\"******\"";
-    private static final String ACCESS_KEY_REPLACEMENT = "accessKey\":\"******\"";
+public class DataxSyncServiceImpl extends ServiceImpl<DataxSyncMapper, DataxSync> implements DataxSyncService {
 
     private final SyncHandler syncHandler;
 
@@ -67,16 +62,9 @@ public class DataxSyncServiceImpl extends ServiceImpl<DataxSyncMapper, DataxSync
         }
         log.debug("datax json: {}", jsonStr);
         // 密码替换为******
-        replacePassword(dataxSyncDTO);
+        dataxSyncDTO.setSettingInfo(PasswordDecoder.hidePassword(dataxSyncDTO.getSettingInfo()));
         DataxSync entity = BaseDataxSyncConvert.INSTANCE.dtoToEntity(dataxSyncDTO);
         saveOrUpdate(entity);
         return BaseDataxSyncConvert.INSTANCE.entityToDTO(entity);
-    }
-
-    private void replacePassword(DataxSyncDTO dataxSyncDTO) {
-        String settingInfo = dataxSyncDTO.getSettingInfo();
-        settingInfo = settingInfo.replaceAll(PASSWORD_REGEX, PASSWORD_REPLACEMENT);
-        settingInfo = settingInfo.replaceAll(ACCESS_KEY_REGEX, ACCESS_KEY_REPLACEMENT);
-        dataxSyncDTO.setSettingInfo(settingInfo);
     }
 }

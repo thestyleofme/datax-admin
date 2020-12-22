@@ -7,6 +7,7 @@ import com.github.thestyleofme.driver.core.infra.utils.DriverUtil;
 import com.github.thestyleofme.driver.core.infra.vo.PluginDatasourceVO;
 import com.github.thestyleofme.plugin.core.infra.utils.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.noear.snack.ONode;
 import org.springframework.stereotype.Service;
 
 /**
@@ -21,9 +22,41 @@ import org.springframework.stereotype.Service;
 @Service
 public class PasswordDecoder {
 
+    private static final String PASSWORD = "password";
+    private static final String ACCESS_KEY = "accessKey";
+
     protected DataSourceSettingInfo getSettingInfo(PluginDatasourceVO pluginDatasourceVO) {
         Properties properties = DriverUtil.parseDatasourceSettingInfo(pluginDatasourceVO);
         return JsonUtil.toObj(JsonUtil.toJson(properties), DataSourceSettingInfo.class);
+    }
+
+    /**
+     * 隐藏密码，设置密码为******
+     *
+     * @param json datax json
+     * @return json
+     */
+    public static String hidePassword(String json) {
+        ONode rootNode = ONode.loadStr(json);
+        rootNode.select("$..parameter[?(@.password)]").forEach(oNode -> oNode.set(PASSWORD, "******"));
+        rootNode.select("$..parameter[?(@.accessKey)]").forEach(oNode -> oNode.set(ACCESS_KEY, "******"));
+        return rootNode.toJson();
+    }
+
+    /**
+     * 将******替换为真正的密码
+     *
+     * @param json               datax json
+     * @param pluginDatasourceVO PluginDatasourceVO
+     * @return json
+     */
+    public static String fillRealPassword(String json, PluginDatasourceVO pluginDatasourceVO) {
+        Properties properties = DriverUtil.parseDatasourceSettingInfo(pluginDatasourceVO);
+        String password = properties.getProperty(PASSWORD);
+        ONode rootNode = ONode.loadStr(json);
+        rootNode.select("$..parameter[?(@.password)]").forEach(oNode -> oNode.set(PASSWORD, password));
+        rootNode.select("$..parameter[?(@.accessKey)]").forEach(oNode -> oNode.set(ACCESS_KEY, password));
+        return rootNode.toJson();
     }
 
 }

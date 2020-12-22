@@ -23,6 +23,8 @@ import com.github.thestyleofme.datax.server.infra.utils.FutureTaskWorker;
 import com.github.thestyleofme.datax.server.infra.utils.ThreadPoolUtil;
 import com.github.thestyleofme.driver.core.app.service.DriverSessionService;
 import com.github.thestyleofme.driver.core.app.service.session.DriverSession;
+import com.github.thestyleofme.driver.core.infra.context.PluginDatasourceHelper;
+import com.github.thestyleofme.driver.core.infra.vo.PluginDatasourceVO;
 import com.github.thestyleofme.plugin.core.infra.constants.BaseConstant;
 import com.github.thestyleofme.plugin.core.infra.utils.JsonUtil;
 import org.noear.snack.ONode;
@@ -55,15 +57,18 @@ public class DataxServerServiceImpl implements DataxServerService {
     private final RestTemplate restTemplate;
     private final DataxSyncService dataxSyncService;
     private final DriverSessionService driverSessionService;
+    private final PluginDatasourceHelper pluginDatasourceHelper;
 
     public DataxServerServiceImpl(DataxZookeeperRegister dataxZookeeperRegister,
                                   @Qualifier("dataxRibbonRestTemplate") RestTemplate restTemplate,
                                   DataxSyncService dataxSyncService,
-                                  DriverSessionService driverSessionService) {
+                                  DriverSessionService driverSessionService,
+                                  PluginDatasourceHelper pluginDatasourceHelper) {
         this.dataxZookeeperRegister = dataxZookeeperRegister;
         this.restTemplate = restTemplate;
         this.dataxSyncService = dataxSyncService;
         this.driverSessionService = driverSessionService;
+        this.pluginDatasourceHelper = pluginDatasourceHelper;
     }
 
     @Override
@@ -111,26 +116,33 @@ public class DataxServerServiceImpl implements DataxServerService {
         if (StringUtils.isEmpty(dataxJobInfo.getSplitCol()) || dataxJobInfo.getSyncId() == null) {
             return Collections.singletonList(dataxJobInfo);
         }
-        // TODO syncId
-        ONode rootNode = ONode.loadStr(StringUtils.isEmpty(dataxJobInfo.getJobJson()) ? "" : dataxJobInfo.getJobJson());
+        DataxSync dataxSync = dataxSyncService.getById(dataxJobInfo.getSyncId());
+        // 优先读取jobJson jobJson没有则使用syncId对应的datax任务json
+        ONode rootNode = ONode.loadStr(StringUtils.isEmpty(dataxJobInfo.getJobJson()) ?
+                getDataxJson(dataxSync) : dataxJobInfo.getJobJson());
         String table = rootNode.select("$.job.content[0].reader.parameter.connection[0].table[0]").getString();
         if (!StringUtils.isEmpty(table)) {
             // table方式不为空 json中增加where，并生成多个json，提交到集群
             // 按时间或主键字段切割
-            return readerSplitByTable(table, dataxJobInfo, rootNode);
+            return readerSplitByTable(dataxSync, table, dataxJobInfo, rootNode);
         }
         String querySql = rootNode.select("$.job.content[0].reader.parameter.connection[0].querySql[0]").getString();
         if (!StringUtils.isEmpty(querySql)) {
             // querySql方式不为空 json中修改此querySql，并生成多个json，提交到集群
             // 按时间或主键字段切割
-            return readerSplitByQuerySql(querySql, dataxJobInfo, rootNode);
+            return readerSplitByQuerySql(dataxSync,querySql, dataxJobInfo, rootNode);
         }
         // 不支持分片
         return Collections.singletonList(dataxJobInfo);
     }
 
-    private List<DataxJobInfo> readerSplitByTable(String table, DataxJobInfo dataxJobInfo, ONode rootNode) {
-        DataxSync dataxSync = dataxSyncService.getById(dataxJobInfo.getSyncId());
+    private String getDataxJson(DataxSync dataxSync) {
+        PluginDatasourceVO pluginDatasourceVO = pluginDatasourceHelper.getDatasourceWithDecryptPwd(
+                dataxSync.getTenantId(), dataxSync.getSourceDatasourceCode());
+        return PasswordDecoder.fillRealPassword(dataxSync.getSettingInfo(), pluginDatasourceVO);
+    }
+
+    private List<DataxJobInfo> readerSplitByTable(DataxSync dataxSync, String table, DataxJobInfo dataxJobInfo, ONode rootNode) {
         DriverSession driverSession = driverSessionService.getDriverSession(dataxSync.getTenantId(), dataxSync.getSourceDatasourceCode());
         // 超过一定数据量才分片
         Long sourceCount = driverSession.queryCount(dataxSync.getSourceSchema(), "select 1 from " + table);
@@ -230,8 +242,10 @@ public class DataxServerServiceImpl implements DataxServerService {
                         splitCol, splitCol, table, StringUtils.isEmpty(where) ? "" : "where " + where));
     }
 
-    private List<DataxJobInfo> readerSplitByQuerySql(String querySql, DataxJobInfo dataxJobInfo, ONode rootNode) {
-        DataxSync dataxSync = dataxSyncService.getById(dataxJobInfo.getSyncId());
+    private List<DataxJobInfo> readerSplitByQuerySql(DataxSync dataxSync,
+                                                     String querySql,
+                                                     DataxJobInfo dataxJobInfo,
+                                                     ONode rootNode) {
         DriverSession driverSession = driverSessionService.getDriverSession(dataxSync.getTenantId(), dataxSync.getSourceDatasourceCode());
         // 超过一定数据量才分片
         Long sourceCount = driverSession.queryCount(dataxSync.getSourceSchema(), querySql);
