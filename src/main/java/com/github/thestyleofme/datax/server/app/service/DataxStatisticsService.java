@@ -11,7 +11,7 @@ import com.github.thestyleofme.datax.server.domain.entity.DataxStatistics;
  * description
  * </p>
  *
- * @author isaac 2020/12/18 15:27
+ * @author thestyleofme 2020/12/18 15:27
  * @since 1.0.0
  */
 public interface DataxStatisticsService extends IService<DataxStatistics> {

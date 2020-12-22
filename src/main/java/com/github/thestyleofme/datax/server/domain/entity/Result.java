@@ -5,7 +5,7 @@ package com.github.thestyleofme.datax.server.domain.entity;
  * description
  * </p>
  *
- * @author isaac 2020/12/11 11:55
+ * @author thestyleofme 2020/12/11 11:55
  * @since 1.0.0
  */
 public class Result<T> {

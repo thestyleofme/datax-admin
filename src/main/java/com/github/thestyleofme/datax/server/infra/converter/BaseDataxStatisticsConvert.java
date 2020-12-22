@@ -10,7 +10,7 @@ import org.mapstruct.factory.Mappers;
  * description
  * </p>
  *
- * @author isaac 2020/12/18 15:35
+ * @author thestyleofme 2020/12/18 15:35
  * @since 1.0.0
  */
 @Mapper

@@ -23,7 +23,7 @@ import org.springframework.util.CollectionUtils;
  * IRule负载策略 加权轮询(Weighted Round Robin)
  * </p>
  *
- * @author isaac 2020/12/15 16:42
+ * @author thestyleofme 2020/12/15 16:42
  * @since 1.0.0
  */
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
@@ -74,7 +74,7 @@ public class DataxRibbonConfiguration {
      * 加权轮询(Weighted Round Robin)
      * </p>
      *
-     * @author isaac 2020/12/16 9:46
+     * @author thestyleofme 2020/12/16 9:46
      * @since 1.0.0
      */
     public static class DataxLoadBalanceRule extends AbstractLoadBalancerRule {

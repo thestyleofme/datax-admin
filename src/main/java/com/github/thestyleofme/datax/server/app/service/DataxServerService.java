@@ -11,7 +11,7 @@ import com.github.thestyleofme.datax.server.domain.entity.Result;
  * description
  * </p>
  *
- * @author isaac 2020/12/14 17:07
+ * @author thestyleofme 2020/12/14 17:07
  * @since 1.0.0
  */
 public interface DataxServerService {

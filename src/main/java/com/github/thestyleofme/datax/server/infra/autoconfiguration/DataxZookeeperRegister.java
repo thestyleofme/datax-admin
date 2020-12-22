@@ -7,7 +7,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.github.thestyleofme.datax.server.domain.entity.RegisterDataxInfo;
-import com.github.thestyleofme.datax.server.infra.utils.JsonUtil;
+import com.github.thestyleofme.plugin.core.infra.utils.JsonUtil;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
  * description
  * </p>
  *
- * @author isaac 2020/12/14 16:25
+ * @author thestyleofme 2020/12/14 16:25
  * @since 1.0.0
  */
 public class DataxZookeeperRegister {

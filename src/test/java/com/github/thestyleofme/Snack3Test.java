@@ -9,7 +9,7 @@ import org.noear.snack.ONode;
  * Snack3 Json path测试
  * </p>
  *
- * @author isaac 2020/12/16 16:58
+ * @author thestyleofme 2020/12/16 16:58
  * @since 1.0.0
  */
 public class Snack3Test {

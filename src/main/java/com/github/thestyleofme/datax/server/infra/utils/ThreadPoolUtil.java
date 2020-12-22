@@ -9,7 +9,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  * 线程池
  * </p>
  *
- * @author isaac 2020/12/16 15:47
+ * @author thestyleofme 2020/12/16 15:47
  * @since 1.0.0
  */
 public class ThreadPoolUtil {

@@ -8,7 +8,7 @@ import com.github.thestyleofme.datax.server.domain.entity.DataxSync;
  * description
  * </p>
  *
- * @author isaac 2020/12/17 20:42
+ * @author thestyleofme 2020/12/17 20:42
  * @since 1.0.0
  */
 public interface DataxSyncMapper extends BaseMapper<DataxSync> {

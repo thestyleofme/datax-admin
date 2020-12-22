@@ -5,7 +5,7 @@ package com.github.thestyleofme.datax.server.infra.exceptions;
  * JSON异常
  * </p>
  *
- * @author isaac 2020/6/29 13:35
+ * @author thestyleofme 2020/6/29 13:35
  * @since 1.0.0
  */
 public class JsonException extends RuntimeException {

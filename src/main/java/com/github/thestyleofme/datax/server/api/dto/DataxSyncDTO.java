@@ -1,6 +1,8 @@
 package com.github.thestyleofme.datax.server.api.dto;
 
 import java.time.LocalDateTime;
+import java.util.Map;
+import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
@@ -12,7 +14,7 @@ import lombok.*;
  * description
  * </p>
  *
- * @author isaac 2020/12/17 20:36
+ * @author thestyleofme 2020/12/17 20:36
  * @since 1.0.0
  */
 @Data
@@ -65,4 +67,13 @@ public class DataxSyncDTO {
     @ApiModelProperty(hidden = true)
     private Long lastUpdatedBy;
 
+    /**
+     * 同步信息，包含以下三个key
+     *
+     * @see com.github.thestyleofme.datax.server.domain.entity.reader.BaseReader 子类
+     * @see com.github.thestyleofme.datax.server.domain.entity.writer.BaseWriter 子类
+     * @see com.github.thestyleofme.datax.server.domain.entity.datax.Job.Setting
+     */
+    @Transient
+    private Map<String, Object> sync;
 }

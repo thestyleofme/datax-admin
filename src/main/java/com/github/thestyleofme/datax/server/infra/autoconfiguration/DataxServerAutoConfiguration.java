@@ -20,7 +20,7 @@ import org.springframework.web.client.RestTemplate;
  * description
  * </p>
  *
- * @author isaac 2020/12/14 16:02
+ * @author thestyleofme 2020/12/14 16:02
  * @since 1.0.0
  */
 @Configuration

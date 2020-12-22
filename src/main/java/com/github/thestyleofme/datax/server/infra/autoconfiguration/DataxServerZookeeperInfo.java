@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
  * description
  * </p>
  *
- * @author isaac 2020/12/14 16:03
+ * @author thestyleofme 2020/12/14 16:03
  * @since 1.0.0
  */
 @EnableConfigurationProperties(DataxServerZookeeperInfo.class)

@@ -12,7 +12,7 @@ import org.springframework.cloud.netflix.ribbon.RibbonClient;
  * description
  * </p>
  *
- * @author isaac 2020/12/14 16:05
+ * @author thestyleofme 2020/12/14 16:05
  * @since 1.0.0
  */
 @SpringBootApplication(exclude = {

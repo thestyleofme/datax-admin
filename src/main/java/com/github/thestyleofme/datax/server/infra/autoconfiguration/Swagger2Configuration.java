@@ -16,7 +16,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
  * description
  * </p>
  *
- * @author isaac 2020/10/19 11:26
+ * @author thestyleofme 2020/10/19 11:26
  * @since 1.0.0
  */
 @Configuration("dataxAdminSwagger2Configuration")

@@ -5,7 +5,7 @@ package com.github.thestyleofme.datax.server.domain.entity;
  * description
  * </p>
  *
- * @author isaac 2020/12/14 11:12
+ * @author thestyleofme 2020/12/14 11:12
  * @since 1.0.0
  */
 public class RegisterDataxInfo {

@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
  * description
  * </p>
  *
- * @author isaac 2020/12/18 15:21
+ * @author thestyleofme 2020/12/18 15:21
  * @since 1.0.0
  */
 @RestController("dataxSyncController.v1")
