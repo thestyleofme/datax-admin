@@ -1,11 +1,12 @@
 package com.github.thestyleofme.datax.server;
 
-import com.github.thestyleofme.datax.ribbon.DataxRibbonConfiguration;
+import com.github.thestyleofme.datax.server.infra.autoconfiguration.DataxRibbonConfiguration;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
+import org.springframework.cloud.netflix.ribbon.RibbonClients;
 
 /**
  * <p>
@@ -21,7 +22,9 @@ import org.springframework.cloud.netflix.ribbon.RibbonClient;
 @MapperScan({
         "com.github.thestyleofme.**.mapper"
 })
-@RibbonClient(name = "DATAX", configuration = DataxRibbonConfiguration.class)
+@RibbonClients(value = {
+        @RibbonClient(name = "DATAX", configuration = DataxRibbonConfiguration.class)
+})
 public class DataxServerApplication {
 
     public static void main(String[] args) {
