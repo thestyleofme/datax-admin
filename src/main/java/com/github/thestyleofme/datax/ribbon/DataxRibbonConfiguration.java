@@ -1,4 +1,4 @@
-package com.github.thestyleofme.datax.server.infra.autoconfiguration;
+package com.github.thestyleofme.datax.ribbon;
 
 import java.util.List;
 import java.util.Optional;
@@ -6,6 +6,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
+import com.github.thestyleofme.datax.server.infra.autoconfiguration.DataxZookeeperRegister;
 import com.netflix.client.config.IClientConfig;
 import com.netflix.loadbalancer.*;
 import org.springframework.context.annotation.Bean;
@@ -17,14 +18,6 @@ import org.springframework.util.CollectionUtils;
  * <p>
  * 此类不应该被@ComponentScan扫描到，所以不能放在SpringBoot启动类的包以及子包下，才放在此package下
  * <p>
- * 但是如下使用方式是可以的，不需放在扫描包外
- * <pre> {@code
- * @RibbonClients(value = {
- * @RibbonClient(name = "DATAX", configuration = DataxRibbonConfiguration.class)
- * })
- * }</pre>
- * <p>
- * 自定义配置
  * <p>
  * ServerList 从zookeeper中动态获取server
  * IRule负载策略 加权轮询(Weighted Round Robin)
@@ -33,6 +26,7 @@ import org.springframework.util.CollectionUtils;
  * @author thestyleofme 2020/12/22 16:31
  * @since 1.0.0
  */
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Configuration
 public class DataxRibbonConfiguration {
 

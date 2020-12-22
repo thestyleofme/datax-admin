@@ -1,6 +1,6 @@
 package com.github.thestyleofme.datax.server;
 
-import com.github.thestyleofme.datax.server.infra.autoconfiguration.DataxRibbonConfiguration;
+import com.github.thestyleofme.datax.ribbon.DataxRibbonConfiguration;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
