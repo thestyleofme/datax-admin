@@ -6,7 +6,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration;
 import org.springframework.cloud.netflix.ribbon.RibbonClient;
-import org.springframework.cloud.netflix.ribbon.RibbonClients;
 
 /**
  * <p>
@@ -22,9 +21,7 @@ import org.springframework.cloud.netflix.ribbon.RibbonClients;
 @MapperScan({
         "com.github.thestyleofme.**.mapper"
 })
-@RibbonClients(value = {
-        @RibbonClient(name = "DATAX", configuration = DataxRibbonConfiguration.class)
-})
+@RibbonClient(name = "DATAX", configuration = DataxRibbonConfiguration.class)
 public class DataxServerApplication {
 
     public static void main(String[] args) {
