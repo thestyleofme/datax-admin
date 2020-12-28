@@ -32,6 +32,7 @@ public class DataxJobInfo {
      */
     private String job;
     private String jobJson;
+    private String jobName;
 
     //===============================================================================
     //  other

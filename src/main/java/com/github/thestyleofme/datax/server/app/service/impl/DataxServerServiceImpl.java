@@ -112,11 +112,14 @@ public class DataxServerServiceImpl implements DataxServerService {
     }
 
     private List<DataxJobInfo> doReaderSplit(DataxJobInfo dataxJobInfo) {
+        // 设置唯一jobId
+        dataxJobInfo.setJobId(dataxZookeeperRegister.genJobId());
         // 只有传了syncId和分片字段才做reader分片处理，因为负载的原因，传job可能负载的机器没有该文件
         if (StringUtils.isEmpty(dataxJobInfo.getSplitCol()) || dataxJobInfo.getSyncId() == null) {
             return Collections.singletonList(dataxJobInfo);
         }
         DataxSync dataxSync = dataxSyncService.getById(dataxJobInfo.getSyncId());
+        dataxJobInfo.setJobName(dataxSync.getSyncName());
         // 优先读取jobJson jobJson没有则使用syncId对应的datax任务json
         ONode rootNode = ONode.loadStr(StringUtils.isEmpty(dataxJobInfo.getJobJson()) ?
                 getDataxJson(dataxSync) : dataxJobInfo.getJobJson());

@@ -1,5 +1,7 @@
 package com.github.thestyleofme.datax.server.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 /**
  * <p>
  * description
@@ -8,6 +10,7 @@ package com.github.thestyleofme.datax.server.domain.entity;
  * @author thestyleofme 2020/12/11 11:55
  * @since 1.0.0
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Result<T> {
 
     private static final String TYPE_ERROR = "error";

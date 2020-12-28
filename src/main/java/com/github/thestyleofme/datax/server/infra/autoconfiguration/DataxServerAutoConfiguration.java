@@ -54,7 +54,8 @@ public class DataxServerAutoConfiguration {
     @ConditionalOnMissingBean
     public ClientHttpRequestFactory simpleClientHttpRequestFactory() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setReadTimeout(15000);
+        // 不设置超时 让datax慢慢执行完成
+        factory.setReadTimeout(0);
         factory.setConnectTimeout(15000);
         return factory;
     }
