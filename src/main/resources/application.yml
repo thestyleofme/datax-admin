@@ -68,7 +68,7 @@ logging:
     org.apache.ibatis: ${LOGGING_LEVEL:debug}
     com.github.thestyleofme: ${LOGGING_LEVEL:debug}
     # 可看ribbon的一些信息
-    com.netflix.loadbalancer: DEBUG
+#    com.netflix.loadbalancer: DEBUG
 jasypt:
   encryptor:
     # 加密盐值

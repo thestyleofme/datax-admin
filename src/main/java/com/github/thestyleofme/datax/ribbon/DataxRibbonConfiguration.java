@@ -3,12 +3,17 @@ package com.github.thestyleofme.datax.ribbon;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import com.github.thestyleofme.datax.server.infra.autoconfiguration.DataxZookeeperRegister;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.netflix.client.config.IClientConfig;
 import com.netflix.loadbalancer.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -28,6 +33,7 @@ import org.springframework.util.CollectionUtils;
  */
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Configuration
+@Slf4j
 public class DataxRibbonConfiguration {
 
     @Bean
@@ -36,9 +42,61 @@ public class DataxRibbonConfiguration {
     }
 
     @Bean
+    public DataxLoadBalanceRule.SmoothWeightedRoundRobin smoothWeightedRoundRobin(DataxZookeeperRegister dataxZookeeperRegister) {
+        DataxLoadBalanceRule.SmoothWeightedRoundRobin smoothWeightedRoundRobin =
+                new DataxLoadBalanceRule.SmoothWeightedRoundRobin(new CopyOnWriteArrayList<>());
+        ThreadFactory factory = new ThreadFactoryBuilder()
+                .setNameFormat("RefreshDatax-%d")
+                .setDaemon(true)
+                .build();
+        // 第一次触发时执行一次 而后定时刷新
+        refreshDataxServer(dataxZookeeperRegister, smoothWeightedRoundRobin);
+        new ScheduledThreadPoolExecutor(2, factory).scheduleWithFixedDelay(
+                () -> refreshDataxServer(dataxZookeeperRegister, smoothWeightedRoundRobin),
+                1000,
+                30000,
+                TimeUnit.MILLISECONDS
+        );
+        return smoothWeightedRoundRobin;
+    }
+
+    private static void refreshDataxServer(DataxZookeeperRegister dataxZookeeperRegister, DataxLoadBalanceRule.SmoothWeightedRoundRobin smoothWeightedRoundRobin) {
+        log.debug("refresh datax server...");
+        List<DataxLoadBalanceRule.SmoothWeightedRoundRobin.Node> currentNodeList = dataxZookeeperRegister.getAllDataxNode().stream()
+                .map(registerDataxInfo -> new DataxLoadBalanceRule.SmoothWeightedRoundRobin.Node(registerDataxInfo.getUrl(), registerDataxInfo.getWeight()))
+                .collect(Collectors.toList());
+        List<DataxLoadBalanceRule.SmoothWeightedRoundRobin.Node> nodeList = smoothWeightedRoundRobin.getNodeList();
+        if (CollectionUtils.isEmpty(nodeList)) {
+            smoothWeightedRoundRobin.setNodeList(currentNodeList);
+        } else {
+            // 刷新nodeList
+            for (DataxLoadBalanceRule.SmoothWeightedRoundRobin.Node item : nodeList) {
+                // 需删除
+                boolean anyMatch = currentNodeList.stream().anyMatch(o -> o.getServerName().equals(item.getServerName()));
+                if (!anyMatch) {
+                    smoothWeightedRoundRobin.removeNode(item.getServerName());
+                }
+                // 看看是否需要更新权重
+                Optional<DataxLoadBalanceRule.SmoothWeightedRoundRobin.Node> first = currentNodeList.stream()
+                        .filter(node -> node.getServerName().equals(item.getServerName()) &&
+                                node.getWeight() != item.getWeight())
+                        .findFirst();
+                first.ifPresent(o -> item.setWeight(o.getWeight()));
+            }
+            for (DataxLoadBalanceRule.SmoothWeightedRoundRobin.Node item : currentNodeList) {
+                // 需新增
+                boolean anyMatch = nodeList.stream().anyMatch(o -> o.getServerName().equals(item.getServerName()));
+                if (!anyMatch) {
+                    smoothWeightedRoundRobin.addNode(new DataxLoadBalanceRule.SmoothWeightedRoundRobin.Node(item.getServerName(), item.weight));
+                }
+            }
+        }
+    }
+
+    @Bean
     @Primary
-    public IRule dataxRibbonRule(DataxZookeeperRegister dataxZookeeperRegister) {
-        return new DataxLoadBalanceRule(dataxZookeeperRegister);
+    public IRule dataxRibbonRule(DataxLoadBalanceRule.SmoothWeightedRoundRobin smoothWeightedRoundRobin) {
+        return new DataxLoadBalanceRule(smoothWeightedRoundRobin);
     }
 
     /**
@@ -80,13 +138,10 @@ public class DataxRibbonConfiguration {
      */
     public static class DataxLoadBalanceRule extends AbstractLoadBalancerRule {
 
-        private DataxZookeeperRegister dataxZookeeperRegister;
-        private final SmoothWeightedRoundRobin smoothWeightedRoundRobin;
+        private SmoothWeightedRoundRobin smoothWeightedRoundRobin;
 
-        public DataxLoadBalanceRule(DataxZookeeperRegister dataxZookeeperRegister) {
-            this.dataxZookeeperRegister = dataxZookeeperRegister;
-            List<SmoothWeightedRoundRobin.Node> nodeList = new CopyOnWriteArrayList<>();
-            this.smoothWeightedRoundRobin = new SmoothWeightedRoundRobin(nodeList);
+        public DataxLoadBalanceRule(SmoothWeightedRoundRobin smoothWeightedRoundRobin) {
+            this.smoothWeightedRoundRobin = smoothWeightedRoundRobin;
         }
 
         /**
@@ -94,41 +149,11 @@ public class DataxRibbonConfiguration {
          * ribbon底层需要默认的构造函数进行反射
          */
         public DataxLoadBalanceRule() {
-            List<SmoothWeightedRoundRobin.Node> nodeList = new CopyOnWriteArrayList<>();
-            this.smoothWeightedRoundRobin = new SmoothWeightedRoundRobin(nodeList);
+
         }
 
         @Override
         public Server choose(Object key) {
-            List<SmoothWeightedRoundRobin.Node> currentNodeList = dataxZookeeperRegister.getAllDataxNode().stream()
-                    .map(registerDataxInfo -> new SmoothWeightedRoundRobin.Node(registerDataxInfo.getUrl(), registerDataxInfo.getWeight()))
-                    .collect(Collectors.toList());
-            List<SmoothWeightedRoundRobin.Node> nodeList = smoothWeightedRoundRobin.getNodeList();
-            if (CollectionUtils.isEmpty(nodeList)) {
-                smoothWeightedRoundRobin.setNodeList(currentNodeList);
-            } else {
-                // 刷新nodeList
-                for (SmoothWeightedRoundRobin.Node item : nodeList) {
-                    // 需删除
-                    boolean anyMatch = currentNodeList.stream().anyMatch(o -> o.getServerName().equals(item.getServerName()));
-                    if (!anyMatch) {
-                        smoothWeightedRoundRobin.removeNode(item.getServerName());
-                    }
-                    // 看看是否需要更新权重
-                    Optional<SmoothWeightedRoundRobin.Node> first = currentNodeList.stream()
-                            .filter(node -> node.getServerName().equals(item.getServerName()) &&
-                                    node.getWeight() != item.getWeight())
-                            .findFirst();
-                    first.ifPresent(o -> item.setWeight(o.getWeight()));
-                }
-                for (SmoothWeightedRoundRobin.Node item : currentNodeList) {
-                    // 需新增
-                    boolean anyMatch = nodeList.stream().anyMatch(o -> o.getServerName().equals(item.getServerName()));
-                    if (!anyMatch) {
-                        smoothWeightedRoundRobin.addNode(new SmoothWeightedRoundRobin.Node(item.getServerName(), item.weight));
-                    }
-                }
-            }
             SmoothWeightedRoundRobin.Node node = smoothWeightedRoundRobin.choose();
             return new Server(node.getServerName());
         }
