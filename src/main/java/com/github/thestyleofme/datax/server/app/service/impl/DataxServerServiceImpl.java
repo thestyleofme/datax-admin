@@ -133,7 +133,7 @@ public class DataxServerServiceImpl implements DataxServerService {
         if (!StringUtils.isEmpty(querySql)) {
             // querySql方式不为空 json中修改此querySql，并生成多个json，提交到集群
             // 按时间或主键字段切割
-            return readerSplitByQuerySql(dataxSync,querySql, dataxJobInfo, rootNode);
+            return readerSplitByQuerySql(dataxSync, querySql, dataxJobInfo, rootNode);
         }
         // 不支持分片
         return Collections.singletonList(dataxJobInfo);
@@ -180,9 +180,9 @@ public class DataxServerServiceImpl implements DataxServerService {
         String end = driverSession.toDate(min.plusMinutes(size).format(DateTimeFormatter.ofPattern(BaseConstant.Pattern.DATETIME)), null);
         for (int i = 1; i <= splitNumber; i++) {
             if (i == splitNumber) {
-                // 分批中的最后一个
-                parameterNode.set(READER_WHERE, String.format("%s (%s <= %s AND %s <= %s)", preWhere, start, splitCol, splitCol,
-                        driverSession.toDate(max.format(DateTimeFormatter.ofPattern(BaseConstant.Pattern.DATETIME)), null)));
+                // 分批中的最后一个 防止漏了 再加一个为空的
+                parameterNode.set(READER_WHERE, String.format("%s (%s <= %s AND %s <= %s) or %s IS NULL", preWhere, start, splitCol, splitCol,
+                        driverSession.toDate(max.format(DateTimeFormatter.ofPattern(BaseConstant.Pattern.DATETIME)), null), splitCol));
             } else {
                 parameterNode.set(READER_WHERE, String.format("%s (%s <= %s AND %s < %s)", preWhere, start, splitCol, splitCol, end));
             }
@@ -192,9 +192,6 @@ public class DataxServerServiceImpl implements DataxServerService {
                 end = driverSession.toDate(min.plusMinutes(size * (i + 1)).format(DateTimeFormatter.ofPattern(BaseConstant.Pattern.DATETIME)), null);
             }
         }
-        // 防止漏了 再加一个为空的
-        parameterNode.set(READER_WHERE, String.format("%s %s IS NULL", preWhere, splitCol));
-        add(dataxJobInfo, rootNode, resultList);
         return resultList;
     }
 
@@ -218,20 +215,17 @@ public class DataxServerServiceImpl implements DataxServerService {
         String preWhere = StringUtils.isEmpty(where) ? "" : where + " and";
         for (int i = 1; i <= splitNumber; i++) {
             if (i == splitNumber) {
-                // 分批中的最后一个
-                parameterNode.set(READER_WHERE, String.format("%s (%d <= %s AND %s <= %d)", preWhere, start, splitCol, splitCol, max));
+                // 分批中的最后一个 防止漏了 再加一个为空的
+                parameterNode.set(READER_WHERE, String.format("%s (%d <= %s AND %s <= %d) or %s IS NULL", preWhere, start, splitCol, splitCol, max, splitCol));
             } else {
                 parameterNode.set(READER_WHERE, String.format("%s (%d <= %s AND %s < %d)", preWhere, start, splitCol, splitCol, end));
             }
             add(dataxJobInfo, rootNode, resultList);
             if (i != splitNumber) {
                 start = end;
-                end *= (i + 1);
+                end += size;
             }
         }
-        // 防止漏了 再加一个为空的
-        parameterNode.set(READER_WHERE, String.format("%s %s IS NULL", preWhere, splitCol));
-        add(dataxJobInfo, rootNode, resultList);
         return resultList;
     }
 
@@ -281,10 +275,12 @@ public class DataxServerServiceImpl implements DataxServerService {
         for (int i = 1; i <= splitNumber; i++) {
             if (i == splitNumber) {
                 // 分批中的最后一个
-                connectionNode.set(READER_QUERY_SQL, String.format("select _t.* from (%s) _t where (%s <= _t.%s AND _t.%s <= %s)", querySql, start, splitCol, splitCol,
-                        driverSession.toDate(max.format(DateTimeFormatter.ofPattern(BaseConstant.Pattern.DATETIME)), null)));
+                connectionNode.set(READER_QUERY_SQL, String.format("select _t.* from (%s) _t where (%s <= _t.%s AND _t.%s <= %s) or _t.%s IS NULL",
+                        querySql, start, splitCol, splitCol,
+                        driverSession.toDate(max.format(DateTimeFormatter.ofPattern(BaseConstant.Pattern.DATETIME)), null), splitCol));
             } else {
-                connectionNode.set(READER_QUERY_SQL, String.format("select _t.* from (%s) _t where (%s <= _t.%s AND _t.%s < %s)", querySql, start, splitCol, splitCol, end));
+                connectionNode.set(READER_QUERY_SQL, String.format("select _t.* from (%s) _t where (%s <= _t.%s AND _t.%s < %s)",
+                        querySql, start, splitCol, splitCol, end));
             }
             add(dataxJobInfo, rootNode, resultList);
             if (i != splitNumber) {
@@ -292,9 +288,6 @@ public class DataxServerServiceImpl implements DataxServerService {
                 end = driverSession.toDate(min.plusMinutes(size * (i + 1)).format(DateTimeFormatter.ofPattern(BaseConstant.Pattern.DATETIME)), null);
             }
         }
-        // 防止漏了 再加一个为空的
-        connectionNode.set(READER_QUERY_SQL, String.format("select _t.* from (%s) _t where _t.%s IS NULL", querySql, splitCol));
-        add(dataxJobInfo, rootNode, resultList);
         return resultList;
     }
 
@@ -322,9 +315,11 @@ public class DataxServerServiceImpl implements DataxServerService {
         for (int i = 1; i <= splitNumber; i++) {
             if (i == splitNumber) {
                 // 分批中的最后一个
-                connectionNode.set(READER_QUERY_SQL, String.format("select _t.* from (%s) _t where (%d <= _t.%s AND _t.%s <= %d)", querySql, start, splitCol, splitCol, max));
+                connectionNode.set(READER_QUERY_SQL, String.format("select _t.* from (%s) _t where (%d <= _t.%s AND _t.%s <= %d) or _t.%s IS NULL",
+                        querySql, start, splitCol, splitCol, max, splitCol));
             } else {
-                connectionNode.set(READER_QUERY_SQL, String.format("select _t.* from (%s) _t where (%d <= _t.%s AND _t.%s < %d)", querySql, start, splitCol, splitCol, end));
+                connectionNode.set(READER_QUERY_SQL, String.format("select _t.* from (%s) _t where (%d <= _t.%s AND _t.%s < %d)",
+                        querySql, start, splitCol, splitCol, end));
             }
             add(dataxJobInfo, rootNode, resultList);
             if (i != splitNumber) {
@@ -332,9 +327,6 @@ public class DataxServerServiceImpl implements DataxServerService {
                 end *= (i + 1);
             }
         }
-        // 防止漏了 再加一个为空的
-        connectionNode.set(READER_QUERY_SQL, String.format("select _t.* from (%s) _t where _t.%s IS NULL", querySql, splitCol));
-        add(dataxJobInfo, rootNode, resultList);
         return resultList;
     }
 
