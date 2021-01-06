@@ -324,7 +324,7 @@ public class DataxServerServiceImpl implements DataxServerService {
             add(dataxJobInfo, rootNode, resultList);
             if (i != splitNumber) {
                 start = end;
-                end *= (i + 1);
+                end += size;
             }
         }
         return resultList;
