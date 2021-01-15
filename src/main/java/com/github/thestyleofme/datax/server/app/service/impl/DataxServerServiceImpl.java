@@ -149,7 +149,7 @@ public class DataxServerServiceImpl implements DataxServerService {
         // writer密码解密
         String writer = oNode.select("$.job.content[0].writer").getString();
         PluginDatasourceVO targetDatasource = pluginDatasourceHelper.getDatasourceWithDecryptPwd(
-                dataxSync.getTenantId(), dataxSync.getSourceDatasourceCode());
+                dataxSync.getTenantId(), dataxSync.getWriteDatasourceCode());
         PasswordDecoder.fillRealPassword(writer, targetDatasource);
         return oNode.getString();
     }
