@@ -140,9 +140,18 @@ public class DataxServerServiceImpl implements DataxServerService {
     }
 
     private String getDataxJson(DataxSync dataxSync) {
-        PluginDatasourceVO pluginDatasourceVO = pluginDatasourceHelper.getDatasourceWithDecryptPwd(
+        ONode oNode = ONode.loadStr(dataxSync.getSettingInfo());
+        // reader密码解密
+        PluginDatasourceVO sourceDatasource = pluginDatasourceHelper.getDatasourceWithDecryptPwd(
                 dataxSync.getTenantId(), dataxSync.getSourceDatasourceCode());
-        return PasswordDecoder.fillRealPassword(dataxSync.getSettingInfo(), pluginDatasourceVO);
+        String reader = oNode.select("$.job.content[0].reader").getString();
+        PasswordDecoder.fillRealPassword(reader, sourceDatasource);
+        // writer密码解密
+        String writer = oNode.select("$.job.content[0].writer").getString();
+        PluginDatasourceVO targetDatasource = pluginDatasourceHelper.getDatasourceWithDecryptPwd(
+                dataxSync.getTenantId(), dataxSync.getSourceDatasourceCode());
+        PasswordDecoder.fillRealPassword(writer, targetDatasource);
+        return oNode.getString();
     }
 
     private List<DataxJobInfo> readerSplitByTable(DataxSync dataxSync, String table, DataxJobInfo dataxJobInfo, ONode rootNode) {
