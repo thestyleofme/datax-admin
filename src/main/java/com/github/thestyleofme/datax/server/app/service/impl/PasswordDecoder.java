@@ -43,20 +43,4 @@ public class PasswordDecoder {
         return rootNode.toJson();
     }
 
-    /**
-     * 将******替换为真正的密码
-     *
-     * @param json               datax json
-     * @param pluginDatasourceVO PluginDatasourceVO
-     * @return json
-     */
-    public static String fillRealPassword(String json, PluginDatasourceVO pluginDatasourceVO) {
-        Properties properties = DriverUtil.parseDatasourceSettingInfo(pluginDatasourceVO);
-        String password = properties.getProperty(PASSWORD);
-        ONode rootNode = ONode.loadStr(json);
-        rootNode.select("$..parameter[?(@.password)]").forEach(oNode -> oNode.set(PASSWORD, password));
-        rootNode.select("$..parameter[?(@.accessKey)]").forEach(oNode -> oNode.set(ACCESS_KEY, password));
-        return rootNode.toJson();
-    }
-
 }

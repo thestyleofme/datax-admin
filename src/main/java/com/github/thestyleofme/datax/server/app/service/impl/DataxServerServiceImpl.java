@@ -24,6 +24,7 @@ import com.github.thestyleofme.datax.server.infra.utils.ThreadPoolUtil;
 import com.github.thestyleofme.driver.core.app.service.DriverSessionService;
 import com.github.thestyleofme.driver.core.app.service.session.DriverSession;
 import com.github.thestyleofme.driver.core.infra.context.PluginDatasourceHelper;
+import com.github.thestyleofme.driver.core.infra.utils.DriverUtil;
 import com.github.thestyleofme.driver.core.infra.vo.PluginDatasourceVO;
 import com.github.thestyleofme.plugin.core.infra.constants.BaseConstant;
 import com.github.thestyleofme.plugin.core.infra.utils.JsonUtil;
@@ -49,6 +50,9 @@ import org.springframework.web.client.RestTemplate;
 public class DataxServerServiceImpl implements DataxServerService {
 
     private static final Logger LOG = LoggerFactory.getLogger(DataxServerServiceImpl.class);
+    private static final String PASSWORD = "password";
+    private static final String ACCESS_KEY = "accessKey";
+
     private static final Long TABLE_SPLIT_NUMBER = 3L;
     private static final String READER_WHERE = "where";
     private static final String READER_QUERY_SQL = "querySql[0]";
@@ -144,14 +148,25 @@ public class DataxServerServiceImpl implements DataxServerService {
         // reader密码解密
         PluginDatasourceVO sourceDatasource = pluginDatasourceHelper.getDatasourceWithDecryptPwd(
                 dataxSync.getTenantId(), dataxSync.getSourceDatasourceCode());
-        String reader = oNode.select("$.job.content[0].reader").getString();
-        PasswordDecoder.fillRealPassword(reader, sourceDatasource);
+        String readerPassword = DriverUtil.parseDatasourceSettingInfo(sourceDatasource).getProperty(PASSWORD);
+        ONode readerNode = oNode.select("$..reader.parameter");
+        replacePassword(readerPassword, readerNode);
         // writer密码解密
-        String writer = oNode.select("$.job.content[0].writer").getString();
         PluginDatasourceVO targetDatasource = pluginDatasourceHelper.getDatasourceWithDecryptPwd(
                 dataxSync.getTenantId(), dataxSync.getWriteDatasourceCode());
-        PasswordDecoder.fillRealPassword(writer, targetDatasource);
+        String writerPassword = DriverUtil.parseDatasourceSettingInfo(targetDatasource).getProperty(PASSWORD);
+        ONode writerNode = oNode.select("$..writer.parameter");
+        replacePassword(writerPassword, writerNode);
         return oNode.getString();
+    }
+
+    private void replacePassword(String password, ONode node) {
+        if (node.contains(PASSWORD)) {
+            node.forEach(o -> o.set(PASSWORD, password));
+        }
+        if (node.contains(ACCESS_KEY)) {
+            node.forEach(o -> o.set(ACCESS_KEY, password));
+        }
     }
 
     private List<DataxJobInfo> readerSplitByTable(DataxSync dataxSync, String table, DataxJobInfo dataxJobInfo, ONode rootNode) {
