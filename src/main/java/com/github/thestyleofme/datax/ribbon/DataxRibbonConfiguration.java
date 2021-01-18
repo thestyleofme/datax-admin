@@ -155,6 +155,9 @@ public class DataxRibbonConfiguration {
         @Override
         public Server choose(Object key) {
             SmoothWeightedRoundRobin.Node node = smoothWeightedRoundRobin.choose();
+            if (node == null) {
+                return null;
+            }
             return new Server(node.getServerName());
         }
 
@@ -218,8 +221,9 @@ public class DataxRibbonConfiguration {
                     }
                 }
                 // 被选中的节点权重减掉总权重
-                assert maxNode != null;
-                maxNode.setCurrentWeight(maxNode.getCurrentWeight() - totalWeight);
+                if (maxNode != null) {
+                    maxNode.setCurrentWeight(maxNode.getCurrentWeight() - totalWeight);
+                }
                 return maxNode;
             }
 
